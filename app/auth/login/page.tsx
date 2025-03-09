@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,13 +25,30 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const redirectPath = searchParams.get('redirectedFrom') || '/dashboard';
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        console.log('Session found in login page, redirecting to dashboard');
+        router.push('/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log('Attempting to sign in with:', email);
+      
       // First sign in with password
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -40,12 +57,15 @@ export default function LoginPage() {
 
       if (error) throw error;
 
+      console.log('Sign in successful, session:', data.session);
+
       toast({
         title: 'Welcome back!',
         description: 'Successfully signed in.',
       });
 
-      router.push('/dashboard');
+      // Force a hard navigation to dashboard to ensure the middleware picks up the session
+      window.location.href = '/dashboard';
     } catch (error: any) {
       toast({
         variant: 'destructive',

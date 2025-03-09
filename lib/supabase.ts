@@ -16,6 +16,13 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storageKey: 'supabase.auth.token',
     },
   }
 );
+
+// Helper function to check if a user is authenticated
+export const isAuthenticated = async () => {
+  const { data } = await supabase.auth.getSession();
+  return !!data.session;
+};

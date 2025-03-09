@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badgers 2014 - Appsmith Setup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #2c5282;
+        }
+        .container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8fafc;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4299e1;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background-color: #3182ce;
+        }
+        code {
+            background-color: #edf2f7;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .step {
+            margin-bottom: 30px;
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background-color: #4299e1;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Badgers 2014 Soccer Team Management System</h1>
+    <h2>Appsmith Setup Guide</h2>
+
+    <div class="container">
+        <h3>Appsmith Configuration</h3>
+        <p>Use the following configuration to set up your Appsmith instance:</p>
+        <pre>
+APPSMITH_DISABLE_INTERCOM=true
+APPSMITH_DISABLE_TELEMETRY=false
+APPSMITH_MAIL_ENABLED=false
+APPSMITH_SENTRY_DSN=
+APPSMITH_SMART_LOOK_ID=
+SERVICE_FQDN_APPSMITH=https://appsmith.lucidsro.com</pre>
+        <a href="https://appsmith.lucidsro.com" target="_blank" class="btn">Open Appsmith</a>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-number">1</span>Access Appsmith</h3>
+        <p>Open your browser and navigate to <a href="https://appsmith.lucidsro.com" target="_blank">https://appsmith.lucidsro.com</a></p>
+        <p>Log in with your credentials.</p>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-number">2</span>Create a New Application</h3>
+        <p>Once logged in, create a new application:</p>
+        <ol>
+            <li>Click on "Create New" or "+" button</li>
+            <li>Select "New Application"</li>
+            <li>Name it "Badgers 2014 Soccer Team"</li>
+            <li>Choose a suitable icon</li>
+            <li>Click "Create"</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-number">3</span>Set Up Supabase Data Source</h3>
+        <p>Connect your application to the Supabase database:</p>
+        <ol>
+            <li>In your Appsmith application, go to "Data Sources" in the left sidebar</li>
+            <li>Click "+ New Data Source"</li>
+            <li>Select "Supabase"</li>
+            <li>Enter the following details:
+                <ul>
+                    <li>Name: Badgers2014</li>
+                    <li>Connection URL: https://supabase.lucidsro.com</li>
+                    <li>API Key: <code>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc0MTM2NjM4MCwiZXhwIjo0ODk3MDM5OTgwLCJyb2xlIjoiYW5vbiJ9.mkFHv0NozPn9_nfN8HutiBq_LMWEvwsQUYY1_Ecvp2M</code></li>
+                </ul>
+            </li>
+            <li>Click "Test" to verify the connection</li>
+            <li>Click "Save" to create the data source</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-number">4</span>Create Pages</h3>
+        <p>Create the following pages for your application:</p>
+        <ul>
+            <li><strong>Dashboard</strong> - Overview of team statistics and upcoming events</li>
+            <li><strong>Player Management</strong> - Add, edit, and view player profiles</li>
+            <li><strong>Event Calendar</strong> - Schedule and manage practices, games, and tournaments</li>
+            <li><strong>Attendance Tracking</strong> - Track player attendance at events</li>
+            <li><strong>Team Statistics</strong> - View and analyze team performance data</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-number">5</span>Create Queries</h3>
+        <p>For each page, create the necessary queries to interact with your Supabase database. Here are some examples:</p>
+        
+        <h4>Player Management Queries:</h4>
+        <pre>
+// Get all players
+SELECT 
+  p.id, 
+  p.jersey_number, 
+  p.position, 
+  p.birth_date, 
+  pr.full_name, 
+  pr.avatar_url 
+FROM players p
+JOIN profiles pr ON p.profile_id = pr.id
+ORDER BY p.jersey_number;</pre>
+
+        <h4>Event Calendar Queries:</h4>
+        <pre>
+// Get upcoming events
+SELECT 
+  id, 
+  title, 
+  description, 
+  event_type, 
+  start_time, 
+  end_time, 
+  location 
+FROM events
+WHERE start_time > NOW()
+ORDER BY start_time;</pre>
+
+        <h4>Attendance Tracking Queries:</h4>
+        <pre>
+// Get attendance for an event
+SELECT 
+  a.id, 
+  a.status, 
+  p.jersey_number, 
+  pr.full_name 
+FROM attendance a
+JOIN players p ON a.player_id = p.id
+JOIN profiles pr ON p.profile_id = pr.id
+WHERE a.event_id = '{{event_id}}'
+ORDER BY p.jersey_number;</pre>
+    </div>
+
+    <div class="container">
+        <h3>Database Schema</h3>
+        <p>Your Supabase database has the following tables:</p>
+        <ul>
+            <li><strong>profiles</strong> - User profiles with authentication information</li>
+            <li><strong>players</strong> - Player details including jersey number, position, etc.</li>
+            <li><strong>events</strong> - Team events including practices, games, and tournaments</li>
+            <li><strong>attendance</strong> - Player attendance records for events</li>
+        </ul>
+    </div>
+
+    <script>
+        // You can add JavaScript here to enhance the page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Appsmith setup guide loaded');
+        });
+    </script>
+</body>
+</html> 
