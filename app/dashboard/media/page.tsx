@@ -107,7 +107,9 @@ export default function MediaPage() {
   const filteredMedia = mediaItems.filter(
     (item) => 
       (!selectedGame || item.gameId === selectedGame) &&
-      (filter === 'all' || item.type === filter)
+      (filter === 'all' || 
+       (filter === 'photos' && item.type === 'photo') || 
+       (filter === 'videos' && item.type === 'video'))
   );
 
   const selectedGameData = selectedGame 
