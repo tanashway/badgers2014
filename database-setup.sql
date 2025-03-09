@@ -2,8 +2,30 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Disable email confirmation requirement for new users
--- For newer Supabase versions, we need to use the auth schema functions
-SELECT auth.enable_email_autoconfirm();
+-- Update existing users to mark their emails as verified
+UPDATE auth.users
+SET email_confirmed_at = CURRENT_TIMESTAMP
+WHERE email_confirmed_at IS NULL;
+
+-- Set up a trigger to automatically confirm emails for new users
+CREATE OR REPLACE FUNCTION public.auto_confirm_email()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE auth.users
+  SET email_confirmed_at = CURRENT_TIMESTAMP
+  WHERE id = NEW.id AND email_confirmed_at IS NULL;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop the trigger if it already exists to avoid errors
+DROP TRIGGER IF EXISTS confirm_email_trigger ON auth.users;
+
+-- Create the trigger
+CREATE TRIGGER confirm_email_trigger
+AFTER INSERT ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.auto_confirm_email();
 
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
