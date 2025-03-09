@@ -1,6 +1,10 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Disable email confirmation requirement for new users
+UPDATE auth.config
+SET confirm_email_on_signup = false;
+
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
