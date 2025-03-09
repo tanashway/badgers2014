@@ -2,8 +2,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Disable email confirmation requirement for new users
-UPDATE auth.config
-SET confirm_email_on_signup = false;
+-- For newer Supabase versions, we need to use the auth schema functions
+SELECT auth.enable_email_autoconfirm();
 
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
