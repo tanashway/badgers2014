@@ -89,8 +89,9 @@ export default function LoginPage() {
 
       console.log('Sign in successful, session:', data.session);
 
-      // Set the session in localStorage
+      // Store the session token
       localStorage.setItem('supabase.auth.token', data.session.access_token);
+      console.log('Session token stored in localStorage');
 
       toast({
         title: 'Welcome back!',

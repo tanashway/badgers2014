@@ -23,6 +23,10 @@ export default function DashboardLayout({
 
     const checkSession = async () => {
       try {
+        // First, check localStorage for session
+        const storedSession = localStorage.getItem('supabase.auth.token');
+        console.log('Stored session:', storedSession);
+
         console.log('Checking dashboard session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -33,15 +37,35 @@ export default function DashboardLayout({
         }
 
         if (!session) {
-          console.log('No active session found, redirecting to login');
-          router.push('/auth/login?redirectedFrom=/dashboard');
-          return;
+          console.log('No active session found, checking localStorage...');
+          if (!storedSession) {
+            console.log('No stored session found, redirecting to login');
+            router.push('/auth/login?redirectedFrom=/dashboard');
+            return;
+          }
         }
 
-        console.log('Session found:', session.user.email);
-        console.log('Session details:', session);
-        setUser(session.user);
+        // If we have a session, set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            console.log('Auth state changed:', event);
+            if (event === 'SIGNED_OUT') {
+              setIsAuthenticated(false);
+              router.push('/auth/login');
+            } else if (event === 'SIGNED_IN' && currentSession) {
+              setUser(currentSession.user);
+              setIsAuthenticated(true);
+            }
+          }
+        );
+
+        console.log('Session found:', session?.user?.email);
+        setUser(session?.user || null);
         setIsAuthenticated(true);
+
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
         console.error('Session check failed:', error);
         router.push('/auth/login?redirectedFrom=/dashboard');
