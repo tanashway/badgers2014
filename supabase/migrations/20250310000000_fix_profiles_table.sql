@@ -16,6 +16,9 @@ CREATE TABLE profiles (
   full_name text,
   email text,
   phone text,
+  address text,
+  birthdate date,
+  gender text,
   avatar_url text,
   role text DEFAULT 'player',
   updated_at timestamptz DEFAULT now()

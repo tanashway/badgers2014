@@ -56,6 +56,9 @@ export default function RegisterPage() {
             full_name: fullName,
             email: email,
             phone: '',
+            address: '',
+            birthdate: null,
+            gender: '',
             updated_at: new Date().toISOString()
           }
         ]);

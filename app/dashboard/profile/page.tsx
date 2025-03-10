@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -17,6 +19,9 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [birthdate, setBirthdate] = useState('');
+  const [gender, setGender] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
   const { toast } = useToast();
@@ -58,6 +63,9 @@ export default function ProfilePage() {
           console.log('Profile found:', profile);
           setFullName(profile.full_name || '');
           setPhone(profile.phone || '');
+          setAddress(profile.address || '');
+          setBirthdate(profile.birthdate || '');
+          setGender(profile.gender || '');
         } else {
           console.log('No profile found, using default values');
         }
@@ -87,6 +95,9 @@ export default function ProfilePage() {
         id: user.id,
         full_name: fullName,
         phone: phone,
+        address: address,
+        birthdate: birthdate,
+        gender: gender,
         updated_at: new Date().toISOString(),
       });
       
@@ -96,7 +107,11 @@ export default function ProfilePage() {
         .upsert({
           id: user.id,
           full_name: fullName,
+          email: email,
           phone: phone,
+          address: address,
+          birthdate: birthdate,
+          gender: gender,
           updated_at: new Date().toISOString(),
         });
 
@@ -146,69 +161,128 @@ export default function ProfilePage() {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Profile Picture</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center">
-            <Avatar className="h-32 w-32 mb-4">
-              <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || 'User'} />
-              <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
-            </Avatar>
-            <p className="text-sm text-muted-foreground text-center">
-              Profile pictures are managed through your authentication provider.
-            </p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="personal" className="mb-8">
+        <TabsList className="mb-6">
+          <TabsTrigger value="personal">Personal Information</TabsTrigger>
+          <TabsTrigger value="contact">Contact Details</TabsTrigger>
+        </TabsList>
         
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              Update your personal details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={email}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-sm text-muted-foreground">
-                Email changes must be done through your authentication provider.
-              </p>
-            </div>
+        <TabsContent value="personal" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="md:col-span-1">
+              <CardHeader>
+                <CardTitle>Profile Picture</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center">
+                <Avatar className="h-32 w-32 mb-4">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || 'User'} />
+                  <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
+                </Avatar>
+                <p className="text-sm text-muted-foreground text-center">
+                  Profile pictures are managed through your authentication provider.
+                </p>
+              </CardContent>
+            </Card>
             
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your phone number"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button onClick={updateProfile} disabled={updating}>
-              {updating ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </CardFooter>
-        </Card>
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Update your personal details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    value={email}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Email changes must be done through your authentication provider.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="birthdate">Birthdate</Label>
+                    <Input
+                      id="birthdate"
+                      type="date"
+                      value={birthdate}
+                      onChange={(e) => setBirthdate(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={gender} onValueChange={setGender}>
+                      <SelectTrigger id="gender">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="contact" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact Information</CardTitle>
+              <CardDescription>
+                Update your contact details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your phone number"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Enter your address"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex justify-end">
+        <Button onClick={updateProfile} disabled={updating} size="lg">
+          {updating ? 'Saving...' : 'Save Changes'}
+        </Button>
       </div>
       
       <Card className="mt-8">
