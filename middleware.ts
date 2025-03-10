@@ -13,11 +13,7 @@ export async function middleware(req: NextRequest) {
 
   // Add debug header to see if session exists
   res.headers.set('x-session-exists', session ? 'true' : 'false');
-
-  // AUTHENTICATION DISABLED FOR TESTING
-  // Uncomment the following blocks to re-enable authentication
   
-  /*
   // If accessing a protected route without a session, redirect to login
   if (!session && req.nextUrl.pathname.startsWith('/dashboard')) {
     console.log('No session found, redirecting to login');
@@ -34,7 +30,6 @@ export async function middleware(req: NextRequest) {
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);
   }
-  */
 
   return res;
 }

@@ -31,15 +31,8 @@ export function Sidebar() {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    // Authentication disabled for testing
-    // Uncomment the following code to re-enable sign-out functionality
-    /*
     await supabase.auth.signOut();
     router.push('/auth/login');
-    */
-    
-    // For testing purposes, just show an alert
-    alert('Sign out functionality is disabled for testing');
   };
 
   return (
