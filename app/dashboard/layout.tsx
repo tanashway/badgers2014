@@ -12,11 +12,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  // Authentication disabled for testing - set to true by default
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user, setUser] = useState<any>({
+    email: 'test@example.com', // Mock user for testing
+    user_metadata: {
+      avatar_url: null
+    }
+  });
   const router = useRouter();
 
   useEffect(() => {
+    // Authentication disabled for testing
+    // Uncomment the following code to re-enable authentication checks
+    /*
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -44,6 +53,12 @@ export default function DashboardLayout({
     };
 
     checkSession();
+    */
+    
+    // Mock authentication for testing
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // Simulate a brief loading time
   }, [router]);
 
   if (isLoading) {

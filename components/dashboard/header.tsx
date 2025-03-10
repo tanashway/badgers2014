@@ -24,8 +24,15 @@ export function Header({ user }: HeaderProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    // Authentication disabled for testing
+    // Uncomment the following code to re-enable sign-out functionality
+    /*
     await supabase.auth.signOut();
     router.push('/auth/login');
+    */
+    
+    // For testing purposes, just show an alert
+    alert('Sign out functionality is disabled for testing');
   };
 
   const userInitials = user?.email 
