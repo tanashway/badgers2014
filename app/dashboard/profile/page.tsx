@@ -17,12 +17,14 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
     const getProfile = async () => {
       try {
+        console.log('Fetching user session...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
@@ -31,22 +33,37 @@ export default function ProfilePage() {
           return;
         }
 
+        console.log('User session found:', session.user.id);
         setUser(session.user);
         setEmail(session.user.email || '');
         
         // Get profile data if it exists
+        console.log('Fetching profile data for user:', session.user.id);
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
         
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          if (profileError.code === 'PGRST116') {
+            console.log('Profile not found, will create one on update');
+          } else {
+            setErrorMessage(`Profile fetch error: ${profileError.message}`);
+          }
+        }
+        
         if (profile) {
+          console.log('Profile found:', profile);
           setFullName(profile.full_name || '');
           setPhone(profile.phone || '');
+        } else {
+          console.log('No profile found, using default values');
         }
       } catch (error) {
         console.error('Error loading profile:', error);
+        setErrorMessage(`Profile load error: ${error instanceof Error ? error.message : String(error)}`);
       } finally {
         setLoading(false);
       }
@@ -56,11 +73,23 @@ export default function ProfilePage() {
   }, [router]);
 
   const updateProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('Cannot update profile: No user found');
+      return;
+    }
     
     setUpdating(true);
+    setErrorMessage('');
     
     try {
+      console.log('Updating profile for user:', user.id);
+      console.log('Profile data to update:', {
+        id: user.id,
+        full_name: fullName,
+        phone: phone,
+        updated_at: new Date().toISOString(),
+      });
+      
       // Update profile
       const { error } = await supabase
         .from('profiles')
@@ -71,13 +100,19 @@ export default function ProfilePage() {
           updated_at: new Date().toISOString(),
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile update error:', error);
+        setErrorMessage(`Update error: ${error.message} (Code: ${error.code})`);
+        throw error;
+      }
       
+      console.log('Profile updated successfully');
       toast({
         title: 'Profile updated',
         description: 'Your profile has been successfully updated.',
       });
     } catch (error: any) {
+      console.error('Profile update exception:', error);
       toast({
         variant: 'destructive',
         title: 'Update failed',
@@ -103,6 +138,13 @@ export default function ProfilePage() {
   return (
     <div className="container max-w-4xl py-10">
       <h1 className="text-3xl font-bold mb-8">Your Profile</h1>
+      
+      {errorMessage && (
+        <div className="mb-6 p-4 border border-red-300 bg-red-50 text-red-800 rounded-md">
+          <p className="font-medium">Error</p>
+          <p>{errorMessage}</p>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <Card className="md:col-span-1">
@@ -199,6 +241,12 @@ export default function ProfilePage() {
           </Button>
         </CardFooter>
       </Card>
+      
+      <div className="mt-8 p-4 border border-gray-200 rounded-md bg-gray-50">
+        <h3 className="font-medium mb-2">Debug Information</h3>
+        <p className="text-sm text-muted-foreground">User ID: {user?.id}</p>
+        <p className="text-sm text-muted-foreground">Email: {user?.email}</p>
+      </div>
     </div>
   );
 } 

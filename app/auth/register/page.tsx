@@ -21,6 +21,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      console.log('Starting registration process...');
+      
       // Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -32,15 +34,20 @@ export default function RegisterPage() {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Auth error during registration:', authError);
+        throw authError;
+      }
 
       if (!authData.user) {
+        console.error('No user data returned from registration');
         throw new Error('Registration failed. Please try again.');
       }
 
-      console.log('User registered successfully:', authData.user);
+      console.log('User registered successfully:', authData.user.id);
 
       // Create the user profile
+      console.log('Creating profile for user:', authData.user.id);
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -48,6 +55,7 @@ export default function RegisterPage() {
             id: authData.user.id,
             full_name: fullName,
             email: email,
+            phone: '',
             updated_at: new Date().toISOString()
           }
         ]);
@@ -69,6 +77,7 @@ export default function RegisterPage() {
       });
 
       // Sign in the user automatically
+      console.log('Attempting to sign in the user automatically');
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -78,6 +87,7 @@ export default function RegisterPage() {
         console.error('Auto sign-in error:', signInError);
         router.push('/auth/login');
       } else {
+        console.log('Auto sign-in successful, redirecting to dashboard');
         // Redirect to dashboard
         window.location.href = '/dashboard';
       }
