@@ -35,12 +35,12 @@ export default function LoginPage() {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         console.log('Session found in login page, redirecting to dashboard');
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       }
     };
     
     checkSession();
-  }, [router]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +49,6 @@ export default function LoginPage() {
     try {
       console.log('Attempting to sign in with:', email);
       
-      // First sign in with password
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -59,12 +58,15 @@ export default function LoginPage() {
 
       console.log('Sign in successful, session:', data.session);
 
+      // Wait for the session to be set
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       toast({
         title: 'Welcome back!',
         description: 'Successfully signed in.',
       });
 
-      // Force a hard navigation to dashboard to ensure the middleware picks up the session
+      // Force a hard navigation to dashboard
       window.location.href = '/dashboard';
     } catch (error: any) {
       toast({
