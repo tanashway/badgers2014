@@ -19,6 +19,7 @@ export default function DashboardLayout({
   useEffect(() => {
     const checkSession = async () => {
       try {
+        console.log('Checking session...');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -33,6 +34,7 @@ export default function DashboardLayout({
           return;
         }
 
+        console.log('Session found:', data.session.user.email);
         setUser(data.session.user);
         setIsAuthenticated(true);
       } catch (error) {
@@ -43,7 +45,12 @@ export default function DashboardLayout({
       }
     };
 
-    checkSession();
+    // Add a small delay to ensure Supabase is initialized
+    const timer = setTimeout(() => {
+      checkSession();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   if (isLoading) {
