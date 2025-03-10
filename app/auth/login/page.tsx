@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,19 +28,31 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const redirectPath = searchParams.get('redirectedFrom') || '/dashboard';
+  const mounted = useRef(false);
 
   // Check if user is already logged in
   useEffect(() => {
+    if (mounted.current) return; // Only run once
+    mounted.current = true;
+
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        console.log('Session found in login page, redirecting to:', redirectPath);
-        window.location.href = redirectPath;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error);
+          return;
+        }
+        if (session) {
+          console.log('Session found in login page, redirecting to:', redirectPath);
+          router.push(redirectPath);
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
       }
     };
     
     checkSession();
-  }, [redirectPath]);
+  }, [redirectPath, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,17 +70,13 @@ export default function LoginPage() {
 
       console.log('Sign in successful, session:', data.session);
 
-      // Wait for the session to be set
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       toast({
         title: 'Welcome back!',
         description: 'Successfully signed in.',
       });
 
-      // Force a hard navigation to the redirect path
-      console.log('Redirecting to:', redirectPath);
-      window.location.href = redirectPath;
+      // Use router.push instead of window.location for smoother navigation
+      router.push(redirectPath);
     } catch (error: any) {
       toast({
         variant: 'destructive',

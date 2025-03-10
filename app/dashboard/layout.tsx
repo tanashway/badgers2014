@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from '@/components/dashboard/sidebar';
@@ -15,42 +15,41 @@ export default function DashboardLayout({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
+  const mounted = useRef(false);
 
   useEffect(() => {
+    if (mounted.current) return;
+    mounted.current = true;
+
     const checkSession = async () => {
       try {
-        console.log('Checking session...');
-        const { data, error } = await supabase.auth.getSession();
+        console.log('Checking dashboard session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error checking session:', error);
-          router.push('/auth/login');
+          router.push('/auth/login?redirectedFrom=/dashboard');
           return;
         }
 
-        if (!data.session) {
+        if (!session) {
           console.log('No active session found, redirecting to login');
-          router.push('/auth/login');
+          router.push('/auth/login?redirectedFrom=/dashboard');
           return;
         }
 
-        console.log('Session found:', data.session.user.email);
-        setUser(data.session.user);
+        console.log('Session found:', session.user.email);
+        setUser(session.user);
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Session check failed:', error);
-        router.push('/auth/login');
+        router.push('/auth/login?redirectedFrom=/dashboard');
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Add a small delay to ensure Supabase is initialized
-    const timer = setTimeout(() => {
-      checkSession();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    checkSession();
   }, [router]);
 
   if (isLoading) {
