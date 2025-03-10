@@ -1,17 +1,59 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Percent as Soccer, Sun, Moon } from 'lucide-react';
+import { Menu, X, Percent as Soccer, Sun, Moon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setUser(data.session?.user || null);
+      } catch (error) {
+        console.error('Error checking user:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  };
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -21,6 +63,10 @@ const Navigation = () => {
     { name: 'Gallery', href: '/gallery' },
     { name: 'Contact', href: '/contact' },
   ];
+
+  const userInitials = user?.email 
+    ? user.email.substring(0, 2).toUpperCase() 
+    : 'U';
 
   return (
     <nav className="bg-background border-b">
@@ -57,9 +103,39 @@ const Navigation = () => {
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button>
-            <Button asChild>
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
+            
+            {isLoading ? (
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse"></div>
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || 'User'} />
+                      <AvatarFallback>{userInitials}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard'}>
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard/profile'}>
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild>
+                <Link href="/auth/login">Sign In</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -107,9 +183,34 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <Button asChild className="w-full mt-4">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
+            {user ? (
+              <>
+                <Link 
+                  href="/dashboard" 
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/dashboard/profile" 
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Button asChild className="w-full mt-4">
+                <Link href="/auth/login">Sign In</Link>
+              </Button>
+            )}
           </div>
         </div>
       )}

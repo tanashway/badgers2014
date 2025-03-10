@@ -25,6 +25,11 @@ export default function RegisterPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
       });
 
       if (authError) throw authError;
@@ -32,6 +37,8 @@ export default function RegisterPage() {
       if (!authData.user) {
         throw new Error('Registration failed. Please try again.');
       }
+
+      console.log('User registered successfully:', authData.user);
 
       // Create the user profile
       const { error: profileError } = await supabase
@@ -46,18 +53,36 @@ export default function RegisterPage() {
         ]);
 
       if (profileError) {
-        // If profile creation fails, we should clean up the auth user
-        await supabase.auth.signOut();
-        throw new Error('Failed to create user profile. Please try again.');
+        console.error('Profile creation error:', profileError);
+        // Continue even if profile creation fails - we'll handle it later
+        toast({
+          title: 'Profile creation issue',
+          description: 'Your account was created, but there was an issue setting up your profile. You can update it later.',
+        });
+      } else {
+        console.log('Profile created successfully');
       }
 
       toast({
         title: 'Registration successful!',
-        description: 'You can now sign in with your credentials.',
+        description: 'Welcome to Badgers 2014!',
       });
 
-      router.push('/auth/login');
+      // Sign in the user automatically
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.error('Auto sign-in error:', signInError);
+        router.push('/auth/login');
+      } else {
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      }
     } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         variant: 'destructive',
         title: 'Registration failed',

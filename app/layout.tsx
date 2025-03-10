@@ -26,7 +26,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navigation />
+          {/* Navigation will be handled by individual layouts */}
           <main className="min-h-screen bg-background">{children}</main>
           <Toaster />
         </ThemeProvider>
