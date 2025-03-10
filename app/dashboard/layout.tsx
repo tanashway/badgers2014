@@ -39,6 +39,7 @@ export default function DashboardLayout({
         }
 
         console.log('Session found:', session.user.email);
+        console.log('Session details:', session);
         setUser(session.user);
         setIsAuthenticated(true);
       } catch (error) {

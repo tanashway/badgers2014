@@ -19,17 +19,21 @@ export const supabase = createClient(
       storage: {
         getItem: (key) => {
           if (typeof window !== 'undefined') {
-            return window.localStorage.getItem(key);
+            const value = window.localStorage.getItem(key);
+            console.log(`Retrieved from localStorage: ${key} =`, value);
+            return value;
           }
           return null;
         },
         setItem: (key, value) => {
           if (typeof window !== 'undefined') {
+            console.log(`Storing in localStorage: ${key} =`, value);
             window.localStorage.setItem(key, value);
           }
         },
         removeItem: (key) => {
           if (typeof window !== 'undefined') {
+            console.log(`Removing from localStorage: ${key}`);
             window.localStorage.removeItem(key);
           }
         },
