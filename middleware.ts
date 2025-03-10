@@ -17,17 +17,17 @@ export async function middleware(req: NextRequest) {
   // If accessing a protected route without a session, redirect to login
   if (!session && req.nextUrl.pathname.startsWith('/dashboard')) {
     console.log('No session found, redirecting to login');
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = '/auth/login';
+    const redirectUrl = new URL('/auth/login', req.url);
     redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If accessing auth pages with a session, redirect to dashboard
+  // If accessing auth pages with a session, redirect to dashboard or the original redirect path
   if (session && (req.nextUrl.pathname.startsWith('/auth/login') || req.nextUrl.pathname.startsWith('/auth/register'))) {
-    console.log('Session found, redirecting to dashboard');
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
+    console.log('Session found, checking for redirect path');
+    const redirectedFrom = req.nextUrl.searchParams.get('redirectedFrom');
+    const redirectUrl = new URL(redirectedFrom || '/dashboard', req.url);
+    console.log('Redirecting to:', redirectUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
 

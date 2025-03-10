@@ -34,13 +34,13 @@ export default function LoginPage() {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        console.log('Session found in login page, redirecting to dashboard');
-        window.location.href = '/dashboard';
+        console.log('Session found in login page, redirecting to:', redirectPath);
+        window.location.href = redirectPath;
       }
     };
     
     checkSession();
-  }, []);
+  }, [redirectPath]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,15 +59,16 @@ export default function LoginPage() {
       console.log('Sign in successful, session:', data.session);
 
       // Wait for the session to be set
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
         title: 'Welcome back!',
         description: 'Successfully signed in.',
       });
 
-      // Force a hard navigation to dashboard
-      window.location.href = '/dashboard';
+      // Force a hard navigation to the redirect path
+      console.log('Redirecting to:', redirectPath);
+      window.location.href = redirectPath;
     } catch (error: any) {
       toast({
         variant: 'destructive',
