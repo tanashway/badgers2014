@@ -55,25 +55,26 @@ export default function RegisterPage() {
             id: authData.user.id,
             full_name: fullName,
             email: email,
-            phone: '',
-            address: '',
-            birthdate: null,
-            gender: '',
+            role: 'player',
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }
-        ]);
+        ])
+        .select()
+        .single();
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // Continue even if profile creation fails - we'll handle it later
-        toast({
-          title: 'Profile creation issue',
-          description: 'Your account was created, but there was an issue setting up your profile. You can update it later.',
-        });
-      } else {
-        console.log('Profile created successfully');
+        // Try to delete the auth user since profile creation failed
+        try {
+          await supabase.auth.signOut();
+        } catch (signOutError) {
+          console.error('Error signing out after profile creation failure:', signOutError);
+        }
+        throw new Error(profileError.message || 'Failed to create user profile');
       }
 
+      console.log('Profile created successfully');
       toast({
         title: 'Registration successful!',
         description: 'Welcome to Badgers 2014!',
@@ -91,6 +92,8 @@ export default function RegisterPage() {
         router.push('/auth/login');
       } else {
         console.log('Auto sign-in successful, redirecting to dashboard');
+        // Wait for the session to be set
+        await new Promise(resolve => setTimeout(resolve, 1000));
         // Redirect to dashboard
         window.location.href = '/dashboard';
       }
