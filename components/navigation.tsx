@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Menu, X, Percent as Soccer, Sun, Moon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -24,12 +24,17 @@ const Navigation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
 
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        setUser(data.session?.user || null);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error checking session:', error);
+          return;
+        }
+        setUser(session?.user || null);
       } catch (error) {
         console.error('Error checking user:', error);
       } finally {
@@ -41,6 +46,7 @@ const Navigation = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user || null);
       }
     );
@@ -51,8 +57,17 @@ const Navigation = () => {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        return;
+      }
+      console.log('Successfully signed out');
+      router.push('/');
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
   };
 
   const navigation = [
@@ -67,6 +82,11 @@ const Navigation = () => {
   const userInitials = user?.email 
     ? user.email.substring(0, 2).toUpperCase() 
     : 'U';
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+    setIsOpen(false);
+  };
 
   return (
     <nav className="bg-background border-b">
@@ -119,10 +139,10 @@ const Navigation = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard'}>
+                  <DropdownMenuItem onClick={() => handleNavigation('/dashboard')}>
                     Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard/profile'}>
+                  <DropdownMenuItem onClick={() => handleNavigation('/dashboard/profile')}>
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -185,20 +205,18 @@ const Navigation = () => {
             ))}
             {user ? (
               <>
-                <Link 
-                  href="/dashboard" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
-                  onClick={() => setIsOpen(false)}
+                <button
+                  onClick={() => handleNavigation('/dashboard')}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
                 >
                   Dashboard
-                </Link>
-                <Link 
-                  href="/dashboard/profile" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
-                  onClick={() => setIsOpen(false)}
+                </button>
+                <button
+                  onClick={() => handleNavigation('/dashboard/profile')}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"
                 >
                   Profile
-                </Link>
+                </button>
                 <button
                   onClick={handleSignOut}
                   className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent"

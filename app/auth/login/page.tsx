@@ -56,34 +56,59 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted');
     setLoading(true);
 
+    if (!email || !password) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter both email and password.',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      console.log('Attempting to sign in with:', email);
+      console.log('Attempting to sign in...');
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+
+      if (!data?.session) {
+        console.error('No session returned after sign in');
+        throw new Error('Authentication failed');
+      }
 
       console.log('Sign in successful, session:', data.session);
+
+      // Set the session in localStorage
+      localStorage.setItem('supabase.auth.token', data.session.access_token);
 
       toast({
         title: 'Welcome back!',
         description: 'Successfully signed in.',
       });
 
-      // Use router.push instead of window.location for smoother navigation
+      // Add a small delay before navigation
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log('Redirecting to:', redirectPath);
       router.push(redirectPath);
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         variant: 'destructive',
         title: 'Login failed',
         description: error.message || 'Invalid email or password.',
       });
-      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
